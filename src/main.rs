@@ -1,9 +1,15 @@
 extern crate reqwest;
-
 extern crate serde;
 extern crate serde_json;
 #[macro_use]
 extern crate serde_derive;
+
+extern crate chrono;
+
+use reqwest::get;
+use serde_json::from_str;
+
+use chrono::prelude::{DateTime, NaiveDateTime, Utc};
 
 #[derive(Serialize, Deserialize)]
 struct Thread {
@@ -20,8 +26,8 @@ struct Page {
 const URL: &str = "http://a.4cdn.org/sci/threads.json";
 
 fn main() {
-    let body = reqwest::get(URL).unwrap().text().unwrap();
-    let json: Vec<Page> = serde_json::from_str(body.as_ref()).unwrap();
+    let body = get(URL).unwrap().text().unwrap();
+    let json: Vec<Page> = from_str(body.as_ref()).unwrap();
 
     let threads = {
         let mut threads = {
@@ -35,11 +41,18 @@ fn main() {
 
             vec
         };
-        threads.sort_by(|a, b| b.last_modified.cmp(&a.last_modified));
+        threads.sort_by(|a, b| a.last_modified.cmp(&b.last_modified));
         threads
     };
 
     for t in threads {
-        println!("Last: {} -> Id {}", t.last_modified ,t.no);
+        let secs = {
+            let secs = NaiveDateTime::from_timestamp(t.last_modified as i64, 0);
+            let secs: DateTime<Utc> = DateTime::from_utc(secs, Utc);
+            secs.format("%Y/%m/%d %H:%M:%S")
+        };
+
+        // Print the newly formatted date and time
+        println!("{} -> {}", secs, t.no);
     }
 }
