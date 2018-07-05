@@ -23,10 +23,23 @@ fn main() {
     let body = reqwest::get(URL).unwrap().text().unwrap();
     let json: Vec<Page> = serde_json::from_str(body.as_ref()).unwrap();
 
-    println!("{}", body);
-    for page in json {
-        for thread in page.threads {
-            println!("Last: {} -> Id: {}", thread.last_modified, thread.no);
-        }
+    let threads = {
+        let mut threads = {
+            let mut vec: Vec<Thread> = Vec::new();
+
+            for p in json {
+                for t in p.threads {
+                    vec.push(t);
+                }
+            }
+
+            vec
+        };
+        threads.sort_by(|a, b| b.last_modified.cmp(&a.last_modified));
+        threads
+    };
+
+    for t in threads {
+        println!("Last: {} -> Id {}", t.last_modified ,t.no);
     }
 }
