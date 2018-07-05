@@ -9,7 +9,8 @@ extern crate chrono;
 use reqwest::get;
 use serde_json::from_str;
 
-use chrono::prelude::{DateTime, NaiveDateTime, Utc};
+use chrono::FixedOffset;
+use chrono::prelude::*;
 
 #[derive(Serialize, Deserialize)]
 struct Thread {
@@ -48,7 +49,9 @@ fn main() {
     for t in threads {
         let secs = {
             let secs = NaiveDateTime::from_timestamp(t.last_modified as i64, 0);
-            let secs: DateTime<Utc> = DateTime::from_utc(secs, Utc);
+            let hour = 3600;
+            let offset = FixedOffset::west(7 * hour);
+            let secs: DateTime<FixedOffset> = DateTime::from_utc(secs, offset);
             secs.format("%Y/%m/%d %H:%M:%S")
         };
 
